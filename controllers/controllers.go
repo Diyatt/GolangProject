@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"log"
+	"net/http"
 
 	"github.com/Diyatt/GolangProject/auth"
 	"github.com/Diyatt/GolangProject/database"
@@ -22,11 +23,41 @@ func GetOrderDetails(c *gin.Context) {
 	// Return order details as JSON response
 
 }
+
 func PlaceOrder(c *gin.Context) {
-	// Parse request body to get order details
-	// Validate order data
-	// Save the order to the database
-	// Return success response
+	// Парсим тело запроса, чтобы получить детали заказа
+	var order models.Order
+	if err := c.ShouldBindJSON(&order); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid order data"})
+		return
+	}
+
+	// Получаем email пользователя из контекста запроса
+	email, exists := c.Get("email")
+	if !exists {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get user email from context"})
+		return
+	}
+	userEmail := email.(string)
+
+	// Находим пользователя в базе данных по email
+	user, err := models.GetUserByEmail(userEmail)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to find user"})
+		return
+	}
+
+	// Присваиваем заказу ID пользователя
+	order.UserID = user.ID
+
+	// Сохраняем заказ в базе данных
+	if err := models.CreateOrder(&order); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save order"})
+		return
+	}
+
+	// Возвращаем успешный ответ
+	c.JSON(http.StatusOK, gin.H{"message": "Order placed successfully"})
 }
 
 func ModifyOrder(c *gin.Context) {

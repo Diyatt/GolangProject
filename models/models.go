@@ -65,3 +65,18 @@ func (user *User) CheckPassword(providedPassword string) error {
 	}
 	return nil
 }
+
+func GetUserByEmail(email string) (*User, error) {
+	var user User
+	if err := database.DB.Where("email = ?", email).First(&user).Error; err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+func CreateOrder(order *Order) error {
+	if err := database.DB.Create(order).Error; err != nil {
+		return err
+	}
+	return nil
+}

@@ -2,6 +2,8 @@ package routes
 
 import (
 	"github.com/Diyatt/GolangProject/controllers"
+	"github.com/Diyatt/GolangProject/middleware"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -12,10 +14,14 @@ func setupRouter() *gin.Engine {
 	router.POST("/signup", controllers.SignUp)
 	router.POST("/signin", controllers.SignIn)
 
-	router.GET("/orders", controllers.GetUsersOrders)
-	router.POST("/order", controllers.PlaceOrder)
-	router.PUT("/orders/:id", controllers.ModifyOrder)
-	router.GET("/orders/:id", controllers.GetOrderDetails)
+	authenticated := router.Group("/")
+	authenticated.Use(middleware.Authz())
+	{
+		authenticated.GET("/orders", controllers.GetUsersOrders)
+		authenticated.POST("/order", controllers.PlaceOrder)
+		authenticated.PUT("/orders/:id", controllers.ModifyOrder)
+		authenticated.GET("/orders/:id", controllers.GetOrderDetails)
+	}
 
 	return router
 }
