@@ -80,3 +80,11 @@ func CreateOrder(order *Order) error {
 	}
 	return nil
 }
+
+func GetOrdersByUserID(userID uint) ([]Order, error) {
+	var orders []Order
+	if err := database.DB.Where("user_id = ?", userID).Find(&orders).Error; err != nil {
+		return nil, err
+	}
+	return orders, nil
+}

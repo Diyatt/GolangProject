@@ -12,9 +12,30 @@ import (
 )
 
 func GetUsersOrders(c *gin.Context) {
-	// Get user ID from authentication token or session
-	// Fetch all orders associated with the user from the database
-	// Return orders list as JSON response
+	// Получаем email пользователя из контекста запроса
+	email, exists := c.Get("email")
+	if !exists {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get user email from context"})
+		return
+	}
+	userEmail := email.(string)
+
+	// Находим пользователя в базе данных по email
+	user, err := models.GetUserByEmail(userEmail)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to find user"})
+		return
+	}
+
+	// Получаем все заказы, связанные с пользователем, из базы данных
+	orders, err := models.GetOrdersByUserID(user.ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user orders"})
+		return
+	}
+
+	// Возвращаем список заказов в формате JSON
+	c.JSON(http.StatusOK, orders)
 }
 
 func GetOrderDetails(c *gin.Context) {
