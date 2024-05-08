@@ -1,6 +1,8 @@
 package controllers
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/gin-gonic/gin"
+)
 
 func GetUsersOrders(c *gin.Context) {
 	// Get user ID from authentication token or session
