@@ -16,9 +16,6 @@ func GetUsersOrders(c *gin.Context) {
 	// Return orders list as JSON response
 }
 
-func SignIn(c *gin.Context) {}
-func SignUp(c *gin.Context) {}
-
 func GetOrderDetails(c *gin.Context) {
 	// Get order ID from URL parameter
 	// Fetch order details from the database
@@ -101,7 +98,7 @@ func Signup(c *gin.Context) {
 // If successful, it generates a token and a refresh token and returns a 200 status code with the token and refresh token
 // If unsuccessful, it returns a 401 or 500 status code with an error message
 
-func Login(c *gin.Context) {
+func SignIn(c *gin.Context) {
 	var payload LoginPayload
 	var user models.User
 	err := c.ShouldBindJSON(&payload)
