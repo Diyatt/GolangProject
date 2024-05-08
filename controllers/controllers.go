@@ -58,7 +58,7 @@ type LoginResponse struct {
 // If successful, it returns a 200 status code with a success message
 // If unsuccessful, it returns a 400 or 500 status code with an error message
 
-func Signup(c *gin.Context) {
+func SignUp(c *gin.Context) {
 	var user models.User
 	err := c.ShouldBindJSON(&user)
 	if err != nil {
