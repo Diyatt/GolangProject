@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/Diyatt/GolangProject/database"
+	"github.com/Diyatt/GolangProject/models"
 	"github.com/Diyatt/GolangProject/routes"
 )
 
@@ -18,6 +19,12 @@ func main() {
 	}
 
 	fmt.Println("Database connected")
+
+	err = database.DB.AutoMigrate(&models.User{}, &models.Order{}, &models.OrderItem{}, &models.Product{})
+
+	if err != nil {
+		panic("Failed to migrate database")
+	}
 
 	routes.RunServer() // run server with gin
 
