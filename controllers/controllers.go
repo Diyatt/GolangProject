@@ -9,6 +9,9 @@ func GetUsersOrders(c *gin.Context) {
 
 }
 
+func SignIn(c *gin.Context) {}
+func SignUp(c *gin.Context) {}
+
 func GetOrderDetails(c *gin.Context) {
 	// Get order ID from URL parameter
 	// Fetch order details from the database
