@@ -8,7 +8,6 @@ func GetUsersOrders(c *gin.Context) {
 	// Get user ID from authentication token or session
 	// Fetch all orders associated with the user from the database
 	// Return orders list as JSON response
-
 }
 
 func SignIn(c *gin.Context) {}
