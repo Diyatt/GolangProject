@@ -26,6 +26,6 @@ func main() {
 		panic("Failed to migrate database")
 	}
 
-	routes.RunServer() // run server with gin
+	routes.RunServer()
 
 }

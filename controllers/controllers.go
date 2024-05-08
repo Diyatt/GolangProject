@@ -3,6 +3,7 @@ package controllers
 import (
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/Diyatt/GolangProject/auth"
 	"github.com/Diyatt/GolangProject/database"
@@ -12,7 +13,6 @@ import (
 )
 
 func GetUsersOrders(c *gin.Context) {
-	// Получаем email пользователя из контекста запроса
 	email, exists := c.Get("email")
 	if !exists {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get user email from context"})
@@ -20,40 +20,52 @@ func GetUsersOrders(c *gin.Context) {
 	}
 	userEmail := email.(string)
 
-	// Находим пользователя в базе данных по email
 	user, err := models.GetUserByEmail(userEmail)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to find user"})
 		return
 	}
 
-	// Получаем все заказы, связанные с пользователем, из базы данных
 	orders, err := models.GetOrdersByUserID(user.ID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch user orders"})
 		return
 	}
 
-	// Возвращаем список заказов в формате JSON
 	c.JSON(http.StatusOK, orders)
 }
 
 func GetOrderDetails(c *gin.Context) {
-	// Get order ID from URL parameter
-	// Fetch order details from the database
-	// Return order details as JSON response
+
+	_, exists := c.Get("email")
+	if !exists {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get user email from context"})
+		return
+	}
+
+	orderID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid order ID"})
+		return
+	}
+
+	order, err := models.GetOrderDetailsByID(uint(orderID))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch order details"})
+		return
+	}
+
+	c.JSON(http.StatusOK, order)
 
 }
 
 func PlaceOrder(c *gin.Context) {
-	// Парсим тело запроса, чтобы получить детали заказа
 	var order models.Order
 	if err := c.ShouldBindJSON(&order); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid order data"})
 		return
 	}
 
-	// Получаем email пользователя из контекста запроса
 	email, exists := c.Get("email")
 	if !exists {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get user email from context"})
@@ -61,54 +73,59 @@ func PlaceOrder(c *gin.Context) {
 	}
 	userEmail := email.(string)
 
-	// Находим пользователя в базе данных по email
 	user, err := models.GetUserByEmail(userEmail)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to find user"})
 		return
 	}
 
-	// Присваиваем заказу ID пользователя
 	order.UserID = user.ID
 
-	// Сохраняем заказ в базе данных
 	if err := models.CreateOrder(&order); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save order"})
 		return
 	}
 
-	// Возвращаем успешный ответ
 	c.JSON(http.StatusOK, gin.H{"message": "Order placed successfully"})
 }
 
 func ModifyOrder(c *gin.Context) {
-	// Get order ID from URL parameter
-	// Parse request body to get updated order details
-	// Validate updated order data
-	// Update the order in the database
-	// Return success response
 
+	orderID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid order ID"})
+		return
+	}
+
+	_, exists := c.Get("email")
+	if !exists {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get user email from context"})
+		return
+	}
+
+	var updatedOrder models.Order
+	if err := c.ShouldBindJSON(&updatedOrder); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid order data"})
+		return
+	}
+
+	if err := models.ModifyOrder(uint(orderID), &updatedOrder); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to modify order"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Order modified successfully"})
 }
 
-// LoginPayload login body
-// LoginPayload is a struct that contains the fields for a user's login credentials
 type LoginPayload struct {
 	Email    string `json:"email" binding:"required"`
 	Password string `json:"password" binding:"required"`
 }
 
-// LoginResponse token response
-// LoginResponse is a struct that contains the fields for a user's login response
 type LoginResponse struct {
 	Token        string `json:"token"`
 	RefreshToken string `json:"refreshtoken"`
 }
-
-// Signup is a function that handles user signup
-// It takes in a gin context as an argument and binds the user data from the request body to a user struct
-// It then hashes the user's password and creates a user record in the database
-// If successful, it returns a 200 status code with a success message
-// If unsuccessful, it returns a 400 or 500 status code with an error message
 
 func SignUp(c *gin.Context) {
 	var user models.User
@@ -143,12 +160,6 @@ func SignUp(c *gin.Context) {
 		"Message": "Sucessfully Register",
 	})
 }
-
-// Login is a function that handles user login
-// It takes in a gin context as an argument and binds the user data from the request body to a LoginPayload struct
-// It then checks if the user exists in the database and if the password is correct
-// If successful, it generates a token and a refresh token and returns a 200 status code with the token and refresh token
-// If unsuccessful, it returns a 401 or 500 status code with an error message
 
 func SignIn(c *gin.Context) {
 	var payload LoginPayload
@@ -207,32 +218,4 @@ func SignIn(c *gin.Context) {
 		RefreshToken: signedtoken,
 	}
 	c.JSON(200, tokenResponse)
-}
-func Profile(c *gin.Context) {
-	// Initialize a user model
-	var user models.User
-	// Get the email from the authorization middleware
-	email, _ := c.Get("email")
-	// Query the database for the user
-	result := database.DB.Where("email = ?", email.(string)).First(&user)
-	// If the user is not found, return a 404 status code
-	if result.Error == gorm.ErrRecordNotFound {
-		c.JSON(404, gin.H{
-			"Error": "User Not Found",
-		})
-		c.Abort()
-		return
-	}
-	// If an error occurs while retrieving the user profile, return a 500 status code
-	if result.Error != nil {
-		c.JSON(500, gin.H{
-			"Error": "Could Not Get User Profile",
-		})
-		c.Abort()
-		return
-	}
-	// Set the user's password to an empty string
-	user.Password = ""
-	// Return the user profile with a 200 status code
-	c.JSON(200, user)
 }
