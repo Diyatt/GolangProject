@@ -11,8 +11,8 @@ func setupRouter() *gin.Engine {
 
 	router := gin.Default()
 
-	router.POST("/signup", controllers.SignUp)
-	router.POST("/signin", controllers.SignIn)
+	router.POST("/signup", controllers.Signup)
+	router.POST("/login", controllers.Login)
 
 	authenticated := router.Group("/")
 	authenticated.Use(middleware.Authz())

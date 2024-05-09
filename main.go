@@ -20,7 +20,7 @@ func main() {
 
 	fmt.Println("Database connected")
 
-	err = database.DB.AutoMigrate(&models.User{}, &models.Order{}, &models.OrderItem{}, &models.Product{})
+	err = database.DB.AutoMigrate(&models.User{}, &models.Order{})
 
 	if err != nil {
 		panic("Failed to migrate database")

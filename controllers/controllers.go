@@ -127,7 +127,7 @@ type LoginResponse struct {
 	RefreshToken string `json:"refreshtoken"`
 }
 
-func SignUp(c *gin.Context) {
+func Signup(c *gin.Context) {
 	var user models.User
 	err := c.ShouldBindJSON(&user)
 	if err != nil {
@@ -161,7 +161,7 @@ func SignUp(c *gin.Context) {
 	})
 }
 
-func SignIn(c *gin.Context) {
+func Login(c *gin.Context) {
 	var payload LoginPayload
 	var user models.User
 	err := c.ShouldBindJSON(&payload)
