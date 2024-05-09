@@ -66,6 +66,7 @@ func PlaceOrder(c *gin.Context) {
 		return
 	}
 
+	// Get user email from context
 	email, exists := c.Get("email")
 	if !exists {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get user email from context"})
@@ -73,6 +74,7 @@ func PlaceOrder(c *gin.Context) {
 	}
 	userEmail := email.(string)
 
+	// Find user by email
 	user, err := models.GetUserByEmail(userEmail)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to find user"})
@@ -81,12 +83,14 @@ func PlaceOrder(c *gin.Context) {
 
 	order.UserID = user.ID
 
-	if err := models.CreateOrder(&order); err != nil {
+	// Create the order
+	if err := database.DB.Create(&order).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save order"})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Order placed successfully"})
+
 }
 
 func ModifyOrder(c *gin.Context) {
