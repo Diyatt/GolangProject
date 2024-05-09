@@ -61,12 +61,23 @@ func GetOrderDetails(c *gin.Context) {
 
 func PlaceOrder(c *gin.Context) {
 	var order models.Order
-	if err := c.ShouldBindJSON(&order); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid order data"})
+	var orderData struct {
+		UserID uint   `json:"user_id"`
+		Status string `json:"status"`
+		Items  []uint `json:"items"`
+	}
+
+	if err := c.ShouldBindJSON(&orderData); err != nil {
+		c.JSON(400, gin.H{"error": "Invalid order data"})
 		return
 	}
 
-	// Get user email from context
+	var menuItems []models.MenuItem
+	if err := database.DB.Find(&menuItems, orderData.Items).Error; err != nil {
+		c.JSON(400, gin.H{"error": "Failed to find menu items"})
+		return
+	}
+
 	email, exists := c.Get("email")
 	if !exists {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get user email from context"})
@@ -74,7 +85,6 @@ func PlaceOrder(c *gin.Context) {
 	}
 	userEmail := email.(string)
 
-	// Find user by email
 	user, err := models.GetUserByEmail(userEmail)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to find user"})
@@ -82,15 +92,15 @@ func PlaceOrder(c *gin.Context) {
 	}
 
 	order.UserID = user.ID
+	order.Status = orderData.Status
+	order.Items = menuItems
 
-	// Create the order
-	if err := database.DB.Create(&order).Error; err != nil {
+	if err := models.CreateOrder(&order); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save order"})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Order placed successfully"})
-
 }
 
 func ModifyOrder(c *gin.Context) {

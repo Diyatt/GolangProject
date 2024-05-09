@@ -20,12 +20,30 @@ func main() {
 
 	fmt.Println("Database connected")
 
-	err = database.DB.AutoMigrate(&models.User{}, &models.Order{})
+	err = database.DB.AutoMigrate(&models.User{}, &models.Order{}, &models.MenuItem{})
 
 	if err != nil {
 		panic("Failed to migrate database")
 	}
 
+	createSampleItems()
+
 	routes.RunServer()
 
+}
+
+func createSampleItems() {
+
+	items := []models.MenuItem{
+		{Name: "Product A", Price: 19.99},
+		{Name: "Product B", Price: 29.99},
+		{Name: "Product C", Price: 9.99},
+	}
+
+	for _, item := range items {
+		if err := database.DB.Create(&item).Error; err != nil {
+			log.Fatal("Error creating item:", err)
+		}
+	}
+	fmt.Println("Sample items created successfully")
 }
