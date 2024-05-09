@@ -8,18 +8,9 @@ import (
 
 type Order struct {
 	gorm.Model
-	UserID uint `json:"user_id"`
-	User   User `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"` // Relationship to User
-	Status string
-	Items  []Item `gorm:"many2many:order_items;"`
-}
-
-type Item struct {
-	gorm.Model
-	Name     string  // Name of the item
-	Price    float64 // Price of the item
-	Quantity uint    // Quantity of the item
-	Orders   []Order `gorm:"many2many:order_items;"`
+	UserID      uint    `json:"user_id"`
+	TotalAmount float64 `json:"total_amount"`
+	Status      string  `json:"status"`
 }
 
 type User struct {
@@ -28,7 +19,6 @@ type User struct {
 	Name     string `json:"name" binding:"required"`
 	Email    string `json:"email" binding:"required" gorm:"unique"`
 	Password string `json:"password" binding:"required"`
-	Orders   []Order
 }
 
 func (user *User) CreateUserRecord() error {
