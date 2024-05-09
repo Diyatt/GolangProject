@@ -8,17 +8,33 @@ import (
 
 type Order struct {
 	gorm.Model
-	UserID      uint    `json:"user_id"`
-	TotalAmount float64 `json:"total_amount"`
-	Status      string  `json:"status"`
+	UserID      uint        `json:"user_id"`
+	Items       []OrderItem `json:"items" gorm:"foreignKey:OrderID"`
+	TotalAmount float64     `json:"total_amount"`
+	Status      string      `json:"status"`
+}
+
+type OrderItem struct {
+	gorm.Model
+	OrderID   uint    `json:"order_id"`
+	ProductID uint    `json:"product_id"`
+	Quantity  uint    `json:"quantity"`
+	Price     float64 `json:"price"`
 }
 
 type User struct {
 	gorm.Model
-	ID       uint   `gorm:"primaryKey"`
-	Name     string `json:"name" binding:"required"`
-	Email    string `json:"email" binding:"required" gorm:"unique"`
-	Password string `json:"password" binding:"required"`
+	Name     string `json:"name"`
+	Email    string `json:"email" gorm:"unique"`
+	Password string `json:"-"`
+	Orders   []Order
+}
+
+type Product struct {
+	gorm.Model
+	Name     string  `json:"name"`
+	Price    float64 `json:"price"`
+	Quantity uint    `json:"quantity"`
 }
 
 func (user *User) CreateUserRecord() error {
