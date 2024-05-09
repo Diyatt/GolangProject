@@ -8,9 +8,16 @@ import (
 
 type Order struct {
 	gorm.Model
-	UserID      uint    `json:"user_id"`
-	TotalAmount float64 `json:"total_amount"`
-	Status      string  `json:"status"`
+	UserID uint       `json:"user_id"`
+	Status string     `json:"status"`
+	Items  []MenuItem `gorm:"many2many:order_items;" json:"items"`
+}
+
+type MenuItem struct {
+	gorm.Model
+	Name   string
+	Price  float64
+	Orders []Order `gorm:"many2many:order_items;"`
 }
 
 type User struct {
