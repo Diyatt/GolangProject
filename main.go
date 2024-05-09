@@ -26,6 +26,7 @@ func main() {
 		panic("Failed to migrate database")
 	}
 
+<<<<<<< HEAD
 	menu := []models.MenuItem{
 		{Name: "Gamburger", Price: 5.99},
 		{Name: "Cheeseburger", Price: 6.49},
@@ -53,7 +54,26 @@ func main() {
 	// for i, item := range menuItems {
 	// 	fmt.Printf("%d. %s - $%.2f\n", i+1, item.Name, item.Price)
 	// }
+=======
+	createSampleItems()
+>>>>>>> 0be092e4135aaf3f20dfbc7d8a5c2b4a6ea03c97
 
 	routes.RunServer()
 
+}
+
+func createSampleItems() {
+
+	items := []models.MenuItem{
+		{Name: "Product A", Price: 19.99},
+		{Name: "Product B", Price: 29.99},
+		{Name: "Product C", Price: 9.99},
+	}
+
+	for _, item := range items {
+		if err := database.DB.Create(&item).Error; err != nil {
+			log.Fatal("Error creating item:", err)
+		}
+	}
+	fmt.Println("Sample items created successfully")
 }
