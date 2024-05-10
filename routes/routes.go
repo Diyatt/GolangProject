@@ -15,12 +15,22 @@ func setupRouter() *gin.Engine {
 	router.POST("/login", controllers.Login)
 
 	authenticated := router.Group("/")
-	authenticated.Use(middleware.Authz())
+	authenticated.Use(middleware.RequireAuth)
 	{
-		authenticated.GET("/orders", controllers.GetUsersOrders)
-		authenticated.POST("/order", controllers.PlaceOrder)
+		authenticated.GET("/orders", controllers.GetOrders)
+		authenticated.POST("/order", controllers.CreateOrder)
 		authenticated.PUT("/orders/:id", controllers.ModifyOrder)
 		authenticated.GET("/orders/:id", controllers.GetOrderDetails)
+		authenticated.GET("/menu", controllers.GetMenuItems)
+
+		admin := authenticated.Group("admin")
+		admin.Use(middleware.IsAdmin)
+
+		{
+			admin.POST("/menu", controllers.CreateMenuItem)
+			admin.PUT("/menu/:id", controllers.ModifyMenuItem)
+			admin.DELETE("/menu/:id", controllers.DeleteMenuItem)
+		}
 	}
 
 	return router
