@@ -1,23 +1,54 @@
 package models
 
 import (
+	"errors"
+
 	"github.com/Diyatt/GolangProject/database"
+	"github.com/shopspring/decimal"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
+type Role string
+
+const (
+	Admin  Role = "admin"
+	Client Role = "client"
+)
+
+type Status string
+
+const (
+	Canceled   Status = "canceled"
+	Inproccess Status = "inproccess"
+	Ready      Status = "ready"
+	Done       Status = "done"
+)
+
 type Order struct {
 	gorm.Model
-	UserID uint       `json:"user_id"`
-	Status string     `json:"status"`
-	Items  []MenuItem `gorm:"many2many:order_items;" json:"items"`
+	UserID      uint         `json:"user_id"`
+	Status      Status       `json:"status"`
+	TotalAmount float64      `json:"total_amount"`
+	Items       []*OrderItem `gorm:"foreignKey:OrderID"`
+}
+
+type OrderItem struct {
+	gorm.Model
+	OrderID    uint            `json:"order_id"`
+	MenuItemID uint            `json:"menu_item_id"`
+	Quantity   int             `json:"quantity"`
+	Price      decimal.Decimal `json:"price"`
+	Order      Order           `gorm:"foreignKey:OrderID"`
+	MenuItem   MenuItem        `gorm:"foreignKey:MenuItemID"`
 }
 
 type MenuItem struct {
 	gorm.Model
-	Name   string
-	Price  float64
-	Orders []Order `gorm:"many2many:order_items;"`
+	Name     string       `json:"name"`
+	Quantity uint         `json:"quantity"`
+	Price    float64      `json:"price"`
+	Orders   []*OrderItem `gorm:"foreignKey:MenuItemID"`
 }
 
 type User struct {
@@ -26,6 +57,14 @@ type User struct {
 	Name     string `json:"name" binding:"required"`
 	Email    string `json:"email" binding:"required" gorm:"unique"`
 	Password string `json:"password" binding:"required"`
+	Role     Role
+}
+
+type OrderRequest struct {
+	OrderItems []struct {
+		ProductID uint `json:"product_id"`
+		Quantity  int  `json:"quantity"`
+	} `json:"order_items"`
 }
 
 func (user *User) CreateUserRecord() error {
@@ -97,4 +136,66 @@ func ModifyOrder(orderID uint, updatedOrder *Order) error {
 	}
 
 	return nil
+}
+
+func CreateMenuItem(menuItem *MenuItem) error {
+	if err := database.DB.Create(menuItem).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func GetMenuItems() ([]MenuItem, error) {
+	var menuItems []MenuItem
+	if err := database.DB.Find(&menuItems).Error; err != nil {
+		return nil, err
+	}
+	return menuItems, nil
+}
+
+func GetMenuItemByID(id uint) (*MenuItem, error) {
+	var menuItem MenuItem
+	if err := database.DB.First(&menuItem, id).Error; err != nil {
+		return nil, err
+	}
+	return &menuItem, nil
+}
+
+func UpdateMenuItem(menuItem *MenuItem) error {
+	if err := database.DB.Save(menuItem).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func DeleteMenuItem(id uint) error {
+	if err := database.DB.Delete(&MenuItem{}, id).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func GetOrderItemsByOrderID(orderID uint) ([]*OrderItem, error) {
+	var orderItems []*OrderItem
+	if err := database.DB.Where("order_id = ?", orderID).Find(&orderItems).Error; err != nil {
+		return nil, err
+	}
+	return orderItems, nil
+}
+
+func (u *User) BeforeSave(tx *gorm.DB) (err error) {
+	switch u.Role {
+	case Admin, Client:
+		return nil
+	default:
+		return errors.New("invalid user role")
+	}
+}
+func (o *Order) BeforeSave(tx *gorm.DB) (err error) {
+	switch o.Status {
+	case Canceled, Inproccess, Ready, Done:
+		return nil
+	default:
+		return errors.New("invalid order status")
+	}
 }

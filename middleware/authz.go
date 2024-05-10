@@ -35,6 +35,7 @@ func Authz() gin.HandlerFunc {
 			return
 		}
 		c.Set("email", claims.Email)
+		c.Set("role", claims.Role)
 		c.Next()
 	}
 }

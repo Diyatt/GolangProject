@@ -16,12 +16,14 @@ type JwtWrapper struct {
 
 type JwtClaim struct {
 	Email string
+	Role  string
 	jwt.StandardClaims
 }
 
-func (j *JwtWrapper) GenerateToken(email string) (signedToken string, err error) {
+func (j *JwtWrapper) GenerateToken(email string, role string) (signedToken string, err error) {
 	claims := &JwtClaim{
 		Email: email,
+		Role:  role,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Local().Add(time.Minute * time.Duration(j.ExpirationMinutes)).Unix(),
 			Issuer:    j.Issuer,
@@ -35,9 +37,10 @@ func (j *JwtWrapper) GenerateToken(email string) (signedToken string, err error)
 	return
 }
 
-func (j *JwtWrapper) RefreshToken(email string) (signedtoken string, err error) {
+func (j *JwtWrapper) RefreshToken(email string, role string) (signedtoken string, err error) {
 	claims := &JwtClaim{
 		Email: email,
+		Role:  role,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Local().Add(time.Hour * time.Duration(j.ExpirationHours)).Unix(),
 			Issuer:    j.Issuer,

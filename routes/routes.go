@@ -17,10 +17,17 @@ func setupRouter() *gin.Engine {
 	authenticated := router.Group("/")
 	authenticated.Use(middleware.Authz())
 	{
-		authenticated.GET("/orders", controllers.GetUsersOrders)
-		authenticated.POST("/order", controllers.PlaceOrder)
-		authenticated.PUT("/orders/:id", controllers.ModifyOrder)
-		authenticated.GET("/orders/:id", controllers.GetOrderDetails)
+		authenticated.GET("/order", controllers.GetUsersOrders)
+		authenticated.POST("/order", controllers.PostUsersOrders)
+		authenticated.DELETE("/order/:id", controllers.DeleteOrder)
+		authenticated.PATCH("/order/:id", controllers.UpdateOrder)
+		authenticated.POST("/menu", controllers.CreateMenuItem)
+
+		authenticated.GET("/menu", controllers.GetMenuItems)
+
+		authenticated.PUT("/menu/:id", controllers.UpdateMenuItem)
+
+		authenticated.DELETE("/menu/:id", controllers.DeleteMenuItem)
 	}
 
 	return router
